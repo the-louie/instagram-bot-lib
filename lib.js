@@ -116,7 +116,8 @@ module.exports = function (config) {
          *
          */
         async function switch_mode () {
-            let strategy = routes[config.bot_mode];
+
+            let strategy = (config.bot_mode instanceof Array) ? routes[config.bot_mode[Math.floor(Math.random()*config.bot_mode.length)]] : routes[config.bot_mode];
             if (strategy !== undefined) {
                 await strategy(bot, config, utils, db).start();
             } else {
@@ -125,7 +126,7 @@ module.exports = function (config) {
         }
 
         /**
-         * Start Bot (flow) 
+         * Start Bot (flow)
          * =====================
          * Login --> 2FA (bad location) --> 2FA (sms pin) --> social algorithm from config.js
          *
