@@ -722,7 +722,7 @@ class Fldfmode_classic extends Manager_state {
                         await this.like_open_userpage(); // moved out from the following loop
                         let like_count = Math.floor((Math.random() * this.config.bot_superlike_n_m[1]) + this.config.bot_superlike_n_m[0]);
                         if (this.get_status === 0) {
-                            like_count = 0; 
+                            like_count = 0;
                         }
                         for (let i = 0; i < like_count; i++) {
                             this.log.info(`louie: try like photo ${i + 1}/${like_count}`);
