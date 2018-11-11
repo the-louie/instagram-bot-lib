@@ -121,7 +121,7 @@ class Fldfmode_classic extends Manager_state {
         this.hashtag_tag = this.utils.get_random_hash_tag();
         this.log.info(`current hashtag ${this.hashtag_tag}`);
         try {
-            this.log.debug(`Goto: https://www.instagram.com/explore/tags/${this.hashtag_tag}/`)
+            this.log.debug(`Goto: https://www.instagram.com/explore/tags/${this.hashtag_tag}/`);
             await this.bot.goto(`https://www.instagram.com/explore/tags/${this.hashtag_tag}/`);
         } catch (err) {
             this.log.error(`goto ${err}`);
@@ -152,7 +152,7 @@ class Fldfmode_classic extends Manager_state {
                 await this.utils.sleep(this.utils.random_interval(10, 15));
 
                 if (this.utils.is_debug()) {
-                    this.log.debug(`array photos ${this.cache_hash_tags.join(' ')}`);
+                    this.log.debug(`array photos ${this.cache_hash_tags.join(" ")}`);
                 }
 
                 photo_url = this.get_photo_url("hashtag");
@@ -169,7 +169,7 @@ class Fldfmode_classic extends Manager_state {
                 await this.utils.sleep(this.utils.random_interval(1, 6));
 
                 if (this.cache_hash_tags.length > 0) {
-                    this.log.debug(`Goto: ${photo_url}`)
+                    this.log.debug(`Goto: ${photo_url}`);
                     await this.bot.goto(photo_url);
                 }
             } catch (err) {
@@ -184,7 +184,7 @@ class Fldfmode_classic extends Manager_state {
             await this.utils.sleep(this.utils.random_interval(1, 6));
 
             try {
-                this.log.debug(`Goto: ${photo_url}`)
+                this.log.debug(`Goto: ${photo_url}`);
                 await this.bot.goto(photo_url);
             } catch (err) {
                 this.log.error(`goto ${err}`);
@@ -331,7 +331,7 @@ class Fldfmode_classic extends Manager_state {
         this.log.info("go to url for try defollow");
 
         try {
-            this.log.debug(`Goto: ${this.photo_current}`)
+            this.log.debug(`Goto: ${this.photo_current}`);
             await this.bot.goto(this.photo_current);
         } catch (err) {
             this.log.error(`goto ${err}`);
@@ -486,7 +486,6 @@ class Fldfmode_classic extends Manager_state {
         await this.utils.screenshot(this.LOG_NAME, "userpage");
     }
 
-
     /**
      * Fldfmode_classic: Open Photo
      * =====================
@@ -507,7 +506,7 @@ class Fldfmode_classic extends Manager_state {
                 await this.utils.sleep(this.utils.random_interval(10, 15));
 
                 if (this.utils.is_debug()) {
-                    this.log.debug(`array photos ${this.cache_hash_tags.join(' ')}`);
+                    this.log.debug(`array photos ${this.cache_hash_tags.join(" ")}`);
                 }
 
                 photo_url = this.get_photo_url("hashtag");
@@ -521,7 +520,7 @@ class Fldfmode_classic extends Manager_state {
 
                 await this.utils.sleep(this.utils.random_interval(1, 6));
 
-                this.log.debug(`Goto: ${photo_url}`)
+                this.log.debug(`Goto: ${photo_url}`);
                 await this.bot.goto(photo_url);
             } catch (err) {
                 this.cache_hash_tags = [];
@@ -536,7 +535,7 @@ class Fldfmode_classic extends Manager_state {
             await this.utils.sleep(this.utils.random_interval(1, 6));
 
             try {
-                this.log.debug(`Goto: ${photo_url}`)
+                this.log.debug(`Goto: ${photo_url}`);
                 await this.bot.goto(photo_url);
             } catch (err) {
                 this.log.error(`goto ${err}`);
