@@ -104,7 +104,7 @@ class Fldfmode_classic extends Manager_state {
                 photo_url = this.cache_hash_tags.pop();
             } else {
                 // Weighted random towards newer images
-                const n = Math.floor((1 - Math.sqrt(1 - Math.random())) * this.cache_hash_tags_user.length)
+                const n = Math.floor((1 - Math.sqrt(1 - Math.random())) * this.cache_hash_tags_user.length);
                 photo_url = this.cache_hash_tags_user[n];
             }
         } while ((typeof photo_url === "undefined") && (this.cache_hash_tags.length > 0 || this.cache_hash_tags_user > 0));
