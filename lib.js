@@ -68,6 +68,7 @@ module.exports = function (config) {
         }
         db["logs"] = new sqlite3.Database(config.logdb_path);
         db["fdf"] = new sqlite3.Database(config.fdfdatabase_path);
+        db["fldf"] = new sqlite3.Database(config.fldfdatabase_path);
         if (config.ui !== true) {
             await check.init_empty();
         } else if (config.ui === true) {

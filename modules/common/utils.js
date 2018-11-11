@@ -123,6 +123,7 @@ class Utils {
         await this.create_empty("logs/errors.log", this.config.logerr_path, "");
 
         await this.create_empty("databases/fdf.db", this.config.fdfdatabase_path, "");
+        await this.create_empty("databases/fldf.db", this.config.fdfdatabase_path, "");
         await this.create_empty("databases/logs.db", this.config.logdb_path, "");
     }
 
@@ -179,7 +180,7 @@ class Utils {
         if (pages.length == 2) {
             return true;
         } else {
-            
+
             this.log.info("Bye bye! Shutdown... wait ~30sec for the bot stopping...");
         }
 
