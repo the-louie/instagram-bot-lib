@@ -229,10 +229,10 @@ class Fldfmode_classic extends Manager_state {
         //     this.log.debug(`whitelist ${whitelist}`);
         // }
 
-        let did_follow = true
+        let did_follow = true;
         if (username != "" && whitelist.includes(username)) {
             this.log.warning(`${username}: is in whitelist, ignored by follow.`);
-            did_follow = false
+            did_follow = false;
         } else {
             try {
                 await this.bot.waitForSelector("article header div button");
@@ -242,7 +242,7 @@ class Fldfmode_classic extends Manager_state {
                 if (this.photo_liked[this.photo_current] > 1) {
                     this.log.warning("followed previously");
                     this.db.run("INSERT INTO users (account, mode, username, photo_url, hashtag, type_action) VALUES (?, ?, ?, ?, ?, ?)", this.config.instagram_username, this.LOG_NAME, username, this.photo_current, this.hashtag_tag, "followed previously");
-                    did_follow = false
+                    did_follow = false;
                 } else {
                     await button.click();
 
@@ -256,10 +256,10 @@ class Fldfmode_classic extends Manager_state {
                         this.log.info("follow");
                         this.db.run("INSERT INTO users (account, mode, username, photo_url, hashtag, type_action) VALUES (?, ?, ?, ?, ?, ?)", this.config.instagram_username, this.LOG_NAME, username, this.photo_current, this.hashtag_tag, "follow");
                         this.db_fldf.run("INSERT INTO fldf (account, username, photo_url, hashtag, type_fldf) VALUES (?, ?, ?, ?, ?)", this.config.instagram_username, username, this.photo_current, this.hashtag_tag, "follow");
-                        did_follow = true
+                        did_follow = true;
                     } else {
                         this.log.warning("not follow");
-                        did_follow = false
+                        did_follow = false;
                     }
 
                 }
@@ -272,14 +272,14 @@ class Fldfmode_classic extends Manager_state {
                 this.log.warning("follow error");
                 this.db.run("INSERT INTO users (account, mode, username, photo_url, hashtag, type_action) VALUES (?, ?, ?, ?, ?, ?)", this.config.instagram_username, this.LOG_NAME, username, this.photo_current, this.hashtag_tag, "follow error");
                 this.emit(this.STATE_EVENTS.CHANGE_STATUS, this.STATE.ERROR);
-                did_follow = false
+                did_follow = false;
             }
 
             await this.utils.sleep(this.utils.random_interval(1, 6));
 
             await this.utils.screenshot(this.LOG_NAME, "last_follow_after");
 
-            return did_follow
+            return did_follow;
         }
     }
 
@@ -420,44 +420,43 @@ class Fldfmode_classic extends Manager_state {
      *
      */
     async like_click_heart () {
-      this.log.info("louie: try heart like");
+        this.log.info("louie: try heart like");
 
-      try {
-          await this.bot.waitForSelector("article:nth-child(1) section:nth-child(1) button:nth-child(1)");
-          let button = await this.bot.$("article:nth-child(1) section:nth-child(1) button:nth-child(1)");
-          let buttonIcon = await this.bot.$("article:nth-child(1) section:nth-child(1) button:nth-child(1) span");
-          let classNames = await (await buttonIcon.getProperty('className')).jsonValue()
-          this.log.warning(`louie: before button className typeof ${typeof classNames} '${classNames}'`)
-          if (this.photo_liked[this.photo_current] > 1) {
-              this.log.warning(`louie: </3 (liked previously) ${this.photo_current}`);
-          } else {
-              await button.click();
-              this.log.info("louie: <3");
+        try {
+            await this.bot.waitForSelector("article:nth-child(1) section:nth-child(1) button:nth-child(1)");
+            let button = await this.bot.$("article:nth-child(1) section:nth-child(1) button:nth-child(1)");
+            let button_icon = await this.bot.$("article:nth-child(1) section:nth-child(1) button:nth-child(1) span");
+            let class_names = await (await buttonIcon.getProperty("className")).jsonValue();
+            this.log.warning(`louie: before button className typeof ${typeof class_names} '${class_names}'`);
+            if (this.photo_liked[this.photo_current] > 1) {
+                this.log.warning(`louie: </3 (liked previously) ${this.photo_current}`);
+            } else {
+                await button.click();
+                this.log.info("louie: <3");
 
-              if (this.photo_liked[this.photo_current] === undefined) {
-                this.photo_liked[this.photo_current] = 0;
-              }
-              this.photo_liked[this.photo_current] += 1;
+                if (this.photo_liked[this.photo_current] === undefined) {
+                    this.photo_liked[this.photo_current] = 0;
+                }
+                this.photo_liked[this.photo_current] += 1;
 
-              let buttonIcon = await this.bot.$("article:nth-child(1) section:nth-child(1) button:nth-child(1) span");
-              let classNames = await buttonIcon.getProperty('className')
-              this.log.warning(`louie: after button className ${await classNames.jsonValue()}`)
+                let button_icon = await this.bot.$("article:nth-child(1) section:nth-child(1) button:nth-child(1) span");
+                let class_names = await buttonIcon.getProperty("className");
+                this.log.warning(`louie: after button className ${await classNames.jsonValue()}`);
 
+            }
+            this.emit(this.STATE_EVENTS.CHANGE_STATUS, this.STATE.OK);
+        } catch (err) {
+            if (this.utils.is_debug()) {
+                this.log.debug(err);
+            }
 
-          }
-          this.emit(this.STATE_EVENTS.CHANGE_STATUS, this.STATE.OK);
-      } catch (err) {
-          if (this.utils.is_debug()) {
-              this.log.debug(err);
-          }
+            this.log.warning("</3");
+            this.emit(this.STATE_EVENTS.CHANGE_STATUS, this.STATE.ERROR);
+        }
 
-          this.log.warning("</3");
-          this.emit(this.STATE_EVENTS.CHANGE_STATUS, this.STATE.ERROR);
-      }
+        await this.utils.sleep(this.utils.random_interval(1, 6));
 
-      await this.utils.sleep(this.utils.random_interval(1, 6));
-
-      await this.utils.screenshot(this.LOG_NAME, "last_like_after");
+        await this.utils.screenshot(this.LOG_NAME, "last_like_after");
     }
     /**
      * Fldfmode_classic: open user page
@@ -553,64 +552,63 @@ class Fldfmode_classic extends Manager_state {
      *
      */
     async like_get_urlpic_user () {
-      this.log.info("louie: like_get_urlpic_fromuser");
+        this.log.info("louie: like_get_urlpic_fromuser");
 
-      let photo_url = "";
+        let photo_url = "";
 
-      if (this.cache_hash_tags_user.length <= 0) {
-          try {
-              // Remove explore tags from the list of user hrefs
+        if (this.cache_hash_tags_user.length <= 0) {
+            try {
+                // Remove explore tags from the list of user hrefs
             //   this.cache_hash_tags_user = (await this.bot.$$eval("article a", hrefs => hrefs.map((a) =>
             //       a.href.match(/instagram.com\/explore\/tags/) === null ? a.href : undefined
             //   ))).filter((href) => href !== undefined)
 
-              this.cache_hash_tags_user = await this.bot.$$eval("article a", hrefs => hrefs.map((a) => {
-                return a.href;
-              }));
-              this.cache_hash_tags_user = this.cache_hash_tags_user.filter((a) => a.match(/instagram.com\/explore\/tags/) === null)
+                this.cache_hash_tags_user = await this.bot.$$eval("article a", hrefs => hrefs.map((a) => {
+                    return a.href;
+                }));
+                this.cache_hash_tags_user = this.cache_hash_tags_user.filter((a) => a.match(/instagram.com\/explore\/tags/) === null);
 
+                await this.utils.sleep(this.utils.random_interval(10, 15));
 
-              await this.utils.sleep(this.utils.random_interval(10, 15));
+                if (this.utils.is_debug()) {
+                    this.log.debug(`array photos from user ${this.cache_hash_tags_user.join(" ")}`);
+                }
 
-              if (this.utils.is_debug()) {
-                  this.log.debug(`array photos from user ${this.cache_hash_tags_user.join(' ')}`);
-              }
+                photo_url = this.get_photo_url("user");
 
-              photo_url = this.get_photo_url("user");
+                this.log.info(`louie: current photo url user ${photo_url}`);
+                if (typeof photo_url === "undefined") {
+                    this.log.warning("check if current hashtag have photos, you write it good in config.js? Bot go to next hashtag.");
+                }
 
-              this.log.info(`louie: current photo url user ${photo_url}`);
-              if (typeof photo_url === "undefined") {
-                  this.log.warning("check if current hashtag have photos, you write it good in config.js? Bot go to next hashtag.");
-              }
+                await this.utils.sleep(this.utils.random_interval(1, 6));
 
-              await this.utils.sleep(this.utils.random_interval(1, 6));
+                this.log.debug(`Goto: ${photo_url}`);
+                await this.bot.goto(photo_url);
+                this.photo_current = photo_url;
 
-              this.log.debug(`Goto: ${photo_url}`)
-              await this.bot.goto(photo_url);
-              this.photo_current = photo_url
+            } catch (err) {
+                this.cache_hash_tags = [];
+                this.cache_hash_tags_user = [];
+                this.log.error(`like_get_urlpic_user error ${err}`);
+                await this.utils.screenshot(this.LOG_NAME, "like_get_urlpic_error");
+            }
+        } else {
+            photo_url = this.get_photo_url("user");
 
-          } catch (err) {
-              this.cache_hash_tags = [];
-              this.cache_hash_tags_user = [];
-              this.log.error(`like_get_urlpic_user error ${err}`);
-              await this.utils.screenshot(this.LOG_NAME, "like_get_urlpic_error");
-          }
-      } else {
-          photo_url = this.get_photo_url("user");
+            this.log.info(`louie: current photo url user from cache ${photo_url}`);
+            await this.utils.sleep(this.utils.random_interval(1, 6));
 
-          this.log.info(`louie: current photo url user from cache ${photo_url}`);
-          await this.utils.sleep(this.utils.random_interval(1, 6));
-
-          try {
-              this.log.debug(`Goto: ${photo_url}`)
-              await this.bot.goto(photo_url);
-              this.photo_current = photo_url
-          } catch (err) {
-              this.log.error(`goto ${err}`);
-              this.cache_hash_tags = [];
-              this.cache_hash_tags_user = [];
-          }
-      }
+            try {
+                this.log.debug(`Goto: ${photo_url}`);
+                await this.bot.goto(photo_url);
+                this.photo_current = photo_url;
+            } catch (err) {
+                this.log.error(`goto ${err}`);
+                this.cache_hash_tags = [];
+                this.cache_hash_tags_user = [];
+            }
+        }
     }
 
     /**
@@ -678,12 +676,14 @@ class Fldfmode_classic extends Manager_state {
                     const did_follow = await this.fldf_click_follow();
                     if (did_follow) {
                         // LOUIE -- like also
-                        this.log.info("louie: Going into like-mode")
+                        this.log.info("louie: Going into like-mode");
                         await this.utils.sleep(this.utils.random_interval(1, 6));
 
                         await this.like_open_userpage(); // moved out from the following loop
-                        let like_count = Math.floor((Math.random() * this.config.bot_superlike_n_m[1]) + this.config.bot_superlike_n_m[0])
-                        if (this.get_status === 0) { like_count = 0 }
+                        let like_count = Math.floor((Math.random() * this.config.bot_superlike_n_m[1]) + this.config.bot_superlike_n_m[0]);
+                        if (this.get_status === 0) {
+                            like_count = 0; 
+                        }
                         for (let i = 0; i < like_count; i++) {
                             this.log.info(`louie: try like photo ${i + 1}/${like_count}`);
 
@@ -701,7 +701,7 @@ class Fldfmode_classic extends Manager_state {
                                 break;
                             }
                         }
-                        this.log.info("louie: Exiting from like-mode")
+                        this.log.info("louie: Exiting from like-mode");
                         // LOUIE - like also end
                     }
                 }
