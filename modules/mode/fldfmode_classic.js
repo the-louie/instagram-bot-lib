@@ -55,6 +55,15 @@ class Fldfmode_classic extends Manager_state {
                     self.log.info(`init_db users ADD COLUMN inserted_at: ${err}`);
                 }
             });
+
+            self.db.run("CREATE TABLE IF NOT EXISTS liked_images (id INTEGER PRIMARY KEY AUTOINCREMENT, timestamp DATE DEFAULT (datetime('now','localtime')), account TEXT, username TEXT, photo_url TEXT)", function (err) {
+                if (err) {
+                    self.log.error(`init_db liked_images: ${err}`)
+                } else {
+                    self.log.info('init_db liked_images created')
+                }
+            })
+
         });
 
         await this.db_fldf.serialize(async function () {
@@ -93,11 +102,31 @@ class Fldfmode_classic extends Manager_state {
     //     return photo_url;
     // }
 
+
+    /**
+     * Is image in liked images table
+     * =====================
+     * SQL get return if image in liked_images table
+     *
+     */
+    async is_liked_in_db (photo_url) {
+        let self = this;
+        return new Promise(function (resolve, reject) {
+            self.db.get('SELECT count(*) as c from liked_images where photo_url like ?', photo_url, function (err, row) {
+                if (err) {
+                    self.log.warning(`is_liked_in_db() error select ${err}`);
+                    return reject(err)
+                }
+                resolve(row !== undefined && row.c !== 0);
+            });
+        });
+    }
+
     /**
      * Get photo url from cache
      * @return {string} url
      */
-    get_photo_url (type) {
+    async get_photo_url (type) {
         let photo_url = "";
         do {
             if (type === "hashtag") {
@@ -107,7 +136,11 @@ class Fldfmode_classic extends Manager_state {
                 const n = Math.floor((1 - Math.sqrt(1 - Math.random())) * this.cache_hash_tags_user.length);
                 photo_url = this.cache_hash_tags_user[n];
             }
-        } while ((typeof photo_url === "undefined") && (this.cache_hash_tags.length > 0 || this.cache_hash_tags_user > 0));
+            if (await this.is_liked_in_db(photo_url)) {
+                this.log.debug(`Image in liked_images table ${photo_url}`)
+            }
+        } while ((typeof photo_url === "undefined") && (this.cache_hash_tags.length > 0 || this.cache_hash_tags_user > 0) && await this.is_liked_in_db(photo_url));
+
         return photo_url;
     }
 
@@ -155,12 +188,12 @@ class Fldfmode_classic extends Manager_state {
                     this.log.debug(`array photos ${this.cache_hash_tags.join(" ")}`);
                 }
 
-                photo_url = this.get_photo_url("hashtag");
+                photo_url = await this.get_photo_url("hashtag");
 
                 this.log.info(`current photo url ${photo_url}`);
                 if (typeof photo_url === "undefined") {
                     this.log.warning("check if current hashtag have photos, you write it good in config.js? Bot go to next hashtag.");
-                    photo_url = this.get_photo_url("hashtag");
+                    photo_url = await this.get_photo_url("hashtag");
                     if (photo_url == "" || typeof photo_url === "undefined") {
                         this.cache_hash_tags = [];
                     }
@@ -178,7 +211,7 @@ class Fldfmode_classic extends Manager_state {
                 await this.utils.screenshot(this.LOG_NAME, "fldf_get_urlpic_error");
             }
         } else {
-            photo_url = this.get_photo_url("hashtag");
+            photo_url = await this.get_photo_url("hashtag");
 
             this.log.info(`current photo url from cache ${photo_url}`);
             await this.utils.sleep(this.utils.random_interval(1, 6));
@@ -218,6 +251,7 @@ class Fldfmode_classic extends Manager_state {
             await this.bot.waitForSelector("article div a:nth-child(1)");
             username = await this.bot.evaluate(el => el.innerHTML, await this.bot.$("article div a:nth-child(1)"));
             this.log.info(`username ${username}`);
+            this.username_current = username
         } catch (err) {
             this.log.warning(`get username: ${err}`);
         }
@@ -368,7 +402,7 @@ class Fldfmode_classic extends Manager_state {
             let button_before_click = await this.bot.evaluate(el => el.innerHTML, await this.bot.$("header section div:nth-child(1) button"));
             this.log.info(`button text before click: ${button_before_click}`);
 
-            if (this.photo_liked[this.photo_current] > 1) {
+            if (this.photo_liked[this.photo_current] !== undefined) {
                 this.log.warning("followed previously");
                 this.db.run("INSERT INTO users (account, mode, username, photo_url, hashtag, type_action) VALUES (?, ?, ?, ?, ?, ?)", this.config.instagram_username, this.LOG_NAME, username, this.photo_current, this.hashtag_tag, "defollowed previously");
             } else {
@@ -426,11 +460,10 @@ class Fldfmode_classic extends Manager_state {
             await this.bot.waitForSelector("article:nth-child(1) section:nth-child(1) button:nth-child(1)");
             let button = await this.bot.$("article:nth-child(1) section:nth-child(1) button:nth-child(1)");
             let button_icon = await this.bot.$("article:nth-child(1) section:nth-child(1) button:nth-child(1) span");
-            let class_names = await (await buttonIcon.getProperty("className")).jsonValue();
-            this.log.warning(`louie: before button className typeof ${typeof class_names} '${class_names}'`);
-            if (this.photo_liked[this.photo_current] > 1) {
-                this.log.warning(`louie: </3 (liked previously) ${this.photo_current}`);
-            } else {
+            let class_names = await (await button_icon.getProperty("className")).jsonValue();
+            // glyphsSpriteHeart__outline__24__grey_9 u-__7
+            // glyphsSpriteHeart__filled__24__red_5 u-__7
+            if (class_names.indexOf('outline') !== -1) { // like button is not filled
                 await button.click();
                 this.log.info("louie: <3");
 
@@ -440,9 +473,17 @@ class Fldfmode_classic extends Manager_state {
                 this.photo_liked[this.photo_current] += 1;
 
                 let button_icon = await this.bot.$("article:nth-child(1) section:nth-child(1) button:nth-child(1) span");
-                let class_names = await buttonIcon.getProperty("className");
-                this.log.warning(`louie: after button className ${await classNames.jsonValue()}`);
+                let class_names = await (await button_icon.getProperty("className")).jsonValue();
+                if (class_names.indexOf('filled') !== -1) { // like button have changed class to fille
+                    this.db.run("INSERT INTO liked_images (account, username, photo_url) VALUES (?, ?, ?)", this.config.instagram_username, this.username_current, this.photo_current, (err) => {
+                        if(err) {
+                            this.log.error(`db insert liked_images: ${err}`)
+                        }
+                    });
+                }
 
+            } else {
+                this.log.warning(`louie: </3 (liked previously) ${this.photo_current}`);
             }
             this.emit(this.STATE_EVENTS.CHANGE_STATUS, this.STATE.OK);
         } catch (err) {
@@ -481,7 +522,6 @@ class Fldfmode_classic extends Manager_state {
         }
 
         await this.utils.sleep(this.utils.random_interval(1, 6));
-
         await this.utils.screenshot(this.LOG_NAME, "userpage");
     }
 
@@ -508,7 +548,7 @@ class Fldfmode_classic extends Manager_state {
                     this.log.debug(`array photos ${this.cache_hash_tags.join(" ")}`);
                 }
 
-                photo_url = this.get_photo_url("hashtag");
+                photo_url = await this.get_photo_url("hashtag");
 
                 this.log.info(`current photo url ${photo_url}`);
                 if (typeof photo_url === "undefined") {
@@ -528,7 +568,7 @@ class Fldfmode_classic extends Manager_state {
                 await this.utils.screenshot(this.LOG_NAME, "like_get_urlpic_error");
             }
         } else {
-            photo_url = this.get_photo_url("hashtag");
+            photo_url = await this.get_photo_url("hashtag");
 
             this.log.info(`current photo url from cache ${photo_url}`);
             await this.utils.sleep(this.utils.random_interval(1, 6));
@@ -574,7 +614,7 @@ class Fldfmode_classic extends Manager_state {
                     this.log.debug(`array photos from user ${this.cache_hash_tags_user.join(" ")}`);
                 }
 
-                photo_url = this.get_photo_url("user");
+                photo_url = await this.get_photo_url("user");
 
                 this.log.info(`louie: current photo url user ${photo_url}`);
                 if (typeof photo_url === "undefined") {
@@ -594,7 +634,7 @@ class Fldfmode_classic extends Manager_state {
                 await this.utils.screenshot(this.LOG_NAME, "like_get_urlpic_error");
             }
         } else {
-            photo_url = this.get_photo_url("user");
+            photo_url = await this.get_photo_url("user");
 
             this.log.info(`louie: current photo url user from cache ${photo_url}`);
             await this.utils.sleep(this.utils.random_interval(1, 6));
