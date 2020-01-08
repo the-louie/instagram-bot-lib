@@ -152,15 +152,25 @@ class Fldfmode_classic extends Manager_state {
      */
     async fldf_open_hashtagpage () {
         this.hashtag_tag = this.utils.get_random_hash_tag();
-        this.log.info(`current hashtag ${this.hashtag_tag}`);
+        this.log.info(`current hashtag '${this.hashtag_tag}'`);
+        const url = `https://www.instagram.com/explore/tags/${this.hashtag_tag}/`
+        this.log.debug(`Going to: '${url}'`)
         try {
-            await this.bot.goto(`https://www.instagram.com/explore/tags/${this.hashtag_tag}/`);
+            this.log.debug(`AAAA before screenshot 1`)
+            await this.utils.screenshot(this.LOG_NAME, `before_last_hashtag_${this.hashtag_tag}`);
+            this.log.debug(`AAAA before goto`)
+            await this.bot.goto(url);
+            this.log.debug(`AAAA before screenshot 2`)
+            await this.utils.screenshot(this.LOG_NAME, `after_last_hashtag_${this.hashtag_tag}`);
+            this.log.debug(`AAA after screenshot 2`)
         } catch (err) {
             this.log.error(`goto ${err}`);
         }
 
+        this.log.debug(`before sleep`)
         await this.utils.sleep(this.utils.random_interval(1, 6));
 
+        this.log.debug(`before screenshot 3`)
         await this.utils.screenshot(this.LOG_NAME, "last_hashtag");
     }
 
@@ -281,6 +291,11 @@ class Fldfmode_classic extends Manager_state {
 
                     await this.bot.waitForSelector("article header div button");
                     let button_after_click = await this.bot.evaluate(el => el.innerHTML, await this.bot.$("article header div button"));
+                    /*  Possible bug:
+
+                        [INFO] fldf_classic: button text before click: Follow
+                        [INFO] fldf_classic: button text after click: Follow<div class="                Igw0E   rBNOH          YBx95       _4EzTm                                                                                                               _9qQ0O ZUqME" style="height: 18px; width: 18px;"><svg viewBox="0 0 100 100" class="FSiF6 "><rect x="67" y="45" height="10" width="28" rx="5" ry="5" fill="#fafafa" opacity="0" transform="rotate(0 50 50)"></rect><rect x="67" y="45" height="10" width="28" rx="5" ry="5" fill="#fafafa" opacity="0.125" transform="rotate(45 50 50)"></rect><rect x="67" y="45" height="10" width="28" rx="5" ry="5" fill="#fafafa" opacity="0.25" transform="rotate(90 50 50)"></rect><rect x="67" y="45" height="10" width="28" rx="5" ry="5" fill="#fafafa" opacity="0.375" transform="rotate(135 50 50)"></rect><rect x="67" y="45" height="10" width="28" rx="5" ry="5" fill="#fafafa" opacity="0.5" transform="rotate(180 50 50)"></rect><rect x="67" y="45" height="10" width="28" rx="5" ry="5" fill="#fafafa" opacity="0.625" transform="rotate(225 50 50)"></rect><rect x="67" y="45" height="10" width="28" rx="5" ry="5" fill="#fafafa" opacity="0.75" transform="rotate(270 50 50)"></rect><rect x="67" y="45" height="10" width="28" rx="5" ry="5" fill="#fafafa" opacity="0.875" transform="rotate(315 50 50)"></rect></svg></div>
+                    */
                     this.log.info(`button text after click: ${button_after_click}`);
 
                     if (button_after_click != button_before_click) {
@@ -359,7 +374,7 @@ class Fldfmode_classic extends Manager_state {
     async goto_user_for_defollow (username) {
         this.username_current = username;
         this.photo_current = `https://www.instagram.com/${username}`;
-        this.log.info("go to url for try defollow");
+        this.log.debug(`go to url '${this.photo_current}' and try defollow`);
 
         try {
             await this.bot.goto(this.photo_current);
@@ -375,14 +390,14 @@ class Fldfmode_classic extends Manager_state {
      *
      */
     async fldf_click_defollow () {
-        this.log.info("try defollow");
+        this.log.debug("try defollow");
         let username = "";
         let retry = 0;
         do {
             try {
                 await this.bot.waitForSelector("header section h1");
                 username = await this.bot.evaluate(el => el.innerHTML, await this.bot.$("header section h1"));
-                this.log.info(`username ${username}`);
+                this.log.info(`username '${username}'`);
                 retry = 0;
             } catch (err) {
                 this.log.warning(`get username: ${err}`);
@@ -450,7 +465,7 @@ class Fldfmode_classic extends Manager_state {
      *
      */
     async like_click_heart () {
-        this.log.info("louie: try heart like");
+        // this.log.info("louie: try heart like");
 
         try {
             await this.bot.waitForSelector("article:nth-child(1) section:nth-child(1) button:nth-child(1)");
@@ -461,7 +476,7 @@ class Fldfmode_classic extends Manager_state {
             // glyphsSpriteHeart__filled__24__red_5 u-__7
             if (class_names.indexOf('outline') !== -1) { // like button is not filled
                 await button.click();
-                this.log.info("louie: <3");
+                this.log.info(`louie: liked '${this.photo_current}'`);
 
                 if (this.photo_liked[this.photo_current] === undefined) {
                     this.photo_liked[this.photo_current] = 0;
@@ -540,10 +555,10 @@ class Fldfmode_classic extends Manager_state {
 
                 await this.utils.sleep(this.utils.random_interval(10, 15));
 
-                if (this.utils.is_debug()) {
-                    this.log.debug(`array photos ${this.cache_hash_tags.join(" ")}`);
-                }
-
+                // if (this.utils.is_debug()) {
+                //     this.log.debug(`array photos ${this.cache_hash_tags.join(" ")}`);
+                // }
+                this.log.info(`Found ${this.cache_hash_tags.length} images for ${this.hashtag_tag}`)
                 photo_url = await this.get_photo_url("hashtag");
 
                 this.log.info(`current photo url ${photo_url}`);
@@ -586,7 +601,7 @@ class Fldfmode_classic extends Manager_state {
      *
      */
     async like_get_urlpic_user () {
-        this.log.info("louie: like_get_urlpic_fromuser");
+        // this.log.info("louie: like_get_urlpic_fromuser");
 
         let photo_url = "";
 
@@ -604,13 +619,14 @@ class Fldfmode_classic extends Manager_state {
 
                 await this.utils.sleep(this.utils.random_interval(10, 15));
 
-                if (this.utils.is_debug()) {
-                    this.log.debug(`array photos from user ${this.cache_hash_tags_user.join(" ")}`);
-                }
+                // if (this.utils.is_debug()) {
+                //     this.log.debug(`array photos from user ${this.cache_hash_tags_user.join(" ")}`);
+                // }
+                this.log.info(`like_get_urlpic_user() '${this.username_current}' found ${this.cache_hash_tags_user.length} images`)
 
                 photo_url = await this.get_photo_url("user");
 
-                this.log.info(`louie: current photo url user ${photo_url}`);
+                // this.log.info(`louie: current photo url user ${photo_url}`);
                 if (typeof photo_url === "undefined") {
                     this.log.warning("check if current hashtag have photos, you write it good in config.js? Bot go to next hashtag.");
                 }
@@ -629,7 +645,7 @@ class Fldfmode_classic extends Manager_state {
         } else {
             photo_url = await this.get_photo_url("user");
 
-            this.log.info(`louie: current photo url user from cache ${photo_url}`);
+            // this.log.info(`louie: current photo url user from cache ${photo_url}`);
             await this.utils.sleep(this.utils.random_interval(1, 6));
 
             try {
@@ -673,25 +689,34 @@ class Fldfmode_classic extends Manager_state {
                 this.log.info(`loading... ${new Date(today.getFullYear(), today.getMonth(), today.getDate(), today.getHours(), today.getMinutes(), today.getSeconds())}`);
 
                 // defollow flow
-                let users = await this.get_users_with_type_follow_from_database();
+                const should_we_defollow = (Math.random() > 0.2) // Only defollow ~1/5 of times
+                if (should_we_defollow) {
+                    const users = await this.get_users_with_type_follow_from_database();
 
-                if (typeof users !== "undefined" && users.length > this.config.bot_followrotate) {
-                    this.log.info("defollow flow start");
-                    let rotate = users.length - this.config.bot_followrotate;
-                    this.log.info(`defollow rotate tot: ${rotate}`);
-                    for (let ir = 0; ir < rotate; ir++) {
-                        this.log.info(`defollow rotate n: ${rotate}`);
-                        this.log.info(`defollow user ${users[ir].username} from photo: ${users[ir].photo_url}`);
-                        await this.goto_user_for_defollow(users[ir].username);
-                        await this.utils.sleep(this.utils.random_interval(1, 6));
-                        await this.fldf_click_defollow();
+                    if (users == 0) {
+                        this.log.info("bot defollow all followed user by this app");
+                        this.bot.close();
                     }
+
+                    if (typeof users !== "undefined" && users.length > this.config.bot_followrotate) {
+                        const rand = (Math.floor(Math.random() * (this.config.bot_defollowcount - 2)) + 1)
+                        const rotate = Math.min((users.length - this.config.bot_followrotate), rand);
+                        this.log.info(`defollow flow start. ${users.length} users in db, limit set to ${this.config.bot_followrotate}, defollowing ${rotate} users.`);
+
+                        for (let ir = 0; ir < rotate; ir++) {
+                            this.log.info(`defollow user ${ir + 1}/${rotate} '${users[ir].username}'`);
+                            await this.goto_user_for_defollow(users[ir].username);
+                            await this.utils.sleep(this.utils.random_interval(1, 6));
+                            await this.fldf_click_defollow();
+                            await this.utils.sleep(this.utils.random_interval(2, 5));
+                        }
+                    }
+
+                } else {
+                    this.log.info(`Not defollowing this round.`)
                 }
 
-                if (this.config.bot_followrotate == 0) {
-                    this.log.info("bot defollow all followed user by this app");
-                    this.bot.close();
-                }
+
 
                 this.log.info(`cache array size ${this.cache_hash_tags.length}`);
                 if (this.cache_hash_tags.length <= 0) {
@@ -709,7 +734,6 @@ class Fldfmode_classic extends Manager_state {
                     if (did_follow) {
                         // LOUIE -- like also
                         this.log.info("louie: Going into like-mode");
-                        await this.utils.sleep(this.utils.random_interval(1, 6));
 
                         await this.like_open_userpage(); // moved out from the following loop
                         let like_count = Math.floor((Math.random() * this.config.bot_superlike_n_m[1]) + this.config.bot_superlike_n_m[0]);
@@ -717,14 +741,8 @@ class Fldfmode_classic extends Manager_state {
                             like_count = 0;
                         }
                         for (let i = 0; i < like_count; i++) {
-                            this.log.info(`louie: try like photo ${i + 1}/${like_count}`);
-
-                            // while (this.get_status() === 0) {
-                            //     this.log.info("louie: photo not found, retry next...");
-                            //     await this.like_get_urlpic();
-                            //     await this.like_open_userpage();
-                            // }
-                            await this.utils.sleep(this.utils.random_interval(2, 5));
+                            this.log.info(`louie: like photo ${i + 1}/${like_count}`);
+                            await this.utils.sleep(this.utils.random_interval(1, 3));
                             await this.like_get_urlpic_user();
                             await this.utils.sleep(this.utils.random_interval(1, 3));
                             await this.like_click_heart();
@@ -733,7 +751,6 @@ class Fldfmode_classic extends Manager_state {
                                 break;
                             }
                         }
-                        this.log.info("louie: Exiting from like-mode");
                         // LOUIE - like also end
                     }
                 }
@@ -757,7 +774,7 @@ class Fldfmode_classic extends Manager_state {
                 }
             } else {
                 this.log.info("is night, bot sleep");
-                await this.utils.sleep(this.utils.random_interval(60 * 4, 60 * 5));
+                await this.utils.sleep(this.utils.random_interval(60 * 7, 60 * 13));
             }
 
         } while (true);

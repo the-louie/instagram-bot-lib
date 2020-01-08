@@ -7,6 +7,11 @@
  * @license:    This code and contributions have 'GNU General Public License v3'
  *
  */
+function getMsSinceMidnight(d) {
+  var e = new Date(d !== undefined ? d : new Date());
+  return (d !== undefined ? d : new Date()) - e.setHours(0,0,0,0);
+}
+
 const Manager_state = require("../common/state").Manager_state;
 class Login extends Manager_state {
     constructor (bot, config, utils) {
@@ -66,16 +71,26 @@ class Login extends Manager_state {
     async submitform () {
         this.log.info("submit");
         try {
-            await this.bot.waitForSelector("form > div:nth-child(3) > button");
-            let button = await this.bot.$("form > div:nth-child(3) > button");
+            await this.bot.waitForSelector("button[type=submit]");
+            let button = await this.bot.$("button[type=submit]");
             await button.click();
         } catch (err) {
+          await this.utils.screenshot(this.LOG_NAME, "1st_login_fail");
+
+          try {
+            this.log.error('submitform:' + err)
             await this.bot.waitForSelector("form button");
             let button = await this.bot.$("form button");
             await button.click();
+          } catch (err) {
+            await this.utils.screenshot(this.LOG_NAME, "2nd_login_fail");
+
+            this.log.error('loginform 2:' + err)
+            process.exit(1)
+          }
         }
 
-        await this.utils.screenshot(this.LOG_NAME, "submit");
+        await this.utils.screenshot(this.LOG_NAME, "login_submit");
     }
 
     /**
@@ -122,6 +137,15 @@ class Login extends Manager_state {
     async start () {
         this.log.info("loading...");
 
+        // Sleep between 0000 and 0700 +-1 h
+        if (getMsSinceMidnight() < (21600000 + (Math.random()*3600000))) {
+          // await this.utils.sleep(this.utils.random_interval(107, 401))
+          this.log.warning(`Night time, exiting...`)
+          process.exit()
+        } else {
+          this.log.info(`Not nighttime, proceeding...`)
+        }
+
         await this.open_loginpage();
 
         await this.utils.sleep(this.utils.random_interval(3, 6));
@@ -140,6 +164,8 @@ class Login extends Manager_state {
 
         await this.submitverify();
         this.log.info(`login_status is ${this.get_status()}`);
+
+        await this.utils.screenshot(this.LOG_NAME, "login_status");
 
         await this.utils.sleep(this.utils.random_interval(3, 6));
     }

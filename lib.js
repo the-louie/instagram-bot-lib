@@ -105,7 +105,7 @@ module.exports = function (config) {
         let routes = require("./routes/strategies");
         let utils = require("./modules/common/utils")(bot, this.browser, config);
         let Log = require("./modules/logger/log");
-        let log = new Log("switch_mode", config);
+        var log = new Log("switch_mode", config);
         let login = require("./modules/mode/login.js")(bot, config, utils);
         let twofa = require("./modules/mode/2fa.js")(bot, config, utils);
 
@@ -117,11 +117,12 @@ module.exports = function (config) {
          */
         async function switch_mode () {
 
-            let strategy = (config.bot_mode instanceof Array) ? routes[config.bot_mode[Math.floor(Math.random()*config.bot_mode.length)]] : routes[config.bot_mode];
+            // let strategy = (config.bot_mode instanceof Array) ? routes[config.bot_mode[Math.floor(Math.random()*config.bot_mode.length)]] : routes[config.bot_mode];
+            const strategy = routes[config.bot_mode]
             if (strategy !== undefined) {
                 await strategy(bot, config, utils, db).start();
             } else {
-                log(LOG.ERROR, "switch_mode", `mode ${strategy} not exist!`);
+                console.log(LOG.ERROR, "switch_mode", `mode ${strategy} not exist!`);
             }
         }
 

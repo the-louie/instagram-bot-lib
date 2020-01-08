@@ -12,6 +12,7 @@ module.exports = {
     "likemode_realistic": require("../modules/mode/likemode_realistic"),
     "likemode_superlike": require("../modules/mode/likemode_superlike"),
     "fdfmode_classic": require("../modules/mode/fdfmode_classic"),
+    "hfmode_classic": require("../modules/mode/hf-mode_classic"),
     "fldfmode_classic": require("../modules/mode/fldfmode_classic"),
     "comment_mode": require("../modules/mode/commentmode_classic"),
     "likemode_competitor_users": require("../modules/mode/likemode_competitor_users")

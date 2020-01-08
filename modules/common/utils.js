@@ -154,11 +154,11 @@ class Utils {
     /**
      * Random
      * =====================
-     * Random number between two numbers
+     * Random number * 1000 between two numbers
      *
      */
     random_interval (min, max) {
-        return (Math.floor(Math.random() * (max - min + 1)) + min) * 1000;
+        return (Math.floor(Math.random() * ((max*1000) - (min*1000) + 1000)) + (min*1000));
     }
 
     /**
@@ -214,8 +214,8 @@ class Utils {
      * Zzz
      *
      */
-    sleep (sec) {
-        return new Promise(resolve => setTimeout(resolve, sec));
+    sleep (msec) {
+        return new Promise(resolve => setTimeout(resolve, msec));
     }
 
     /**
